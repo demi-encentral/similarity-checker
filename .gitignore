@@ -29,6 +29,7 @@ ENV/
 .idea/
 .vscode/
 *.swp
+*.log
 *.swo
 
 # OS
