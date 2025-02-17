@@ -5,11 +5,13 @@ from unidecode import unidecode
 from logging_config import logger
 
 vectorizer = TfidfVectorizer(
-        analyzer='char_wb',
-        ngram_range=(2, 3),
-        min_df=2,
-        max_df=0.9
-    )
+    analyzer='char_wb',  # Use character n-grams with word boundaries
+    ngram_range=(2, 4),  # A broader range to capture various name components
+    min_df=1,  # Include all terms, even those that appear only once, since you're dealing with few documents
+    max_df=1.0,  # No upper limit on term frequency since common terms might be relevant
+    lowercase=True,  # Convert all characters to lowercase for consistency
+    strip_accents='unicode'  # Normalize accented characters which could appear in names
+)
 
 def normalize_text(text: str) -> str:
     """
@@ -114,22 +116,11 @@ def preprocess_single_name(
     logger.debug(f"Generated n-grams: {len(ngrams['bigrams'])} bigrams, {len(ngrams['trigrams'])} trigrams, {len(ngrams['quadgrams'])} quadgrams")
 
 
-    corpus = [
-    "John Doe", "Jane Doe", "James Bond", "Alice Wonderland", 
-    "Jack Smith", "Jill Johnson"  
-    ]
-    # Fit the vectorizer on the corpus
-    vectorizer.fit(corpus)
-    # Generate vector representation
-    tfidf_matrix = vectorizer.transform([normalized_name])
-    vector_representation = tfidf_matrix[0].toarray()[0].tolist()
-
     # Assemble the result
     result = {
         "original_name": name,
         "normalized_name": ' '.join(processed_tokens),
         "tokens": processed_tokens,
-        "vector_representation": vector_representation,
         "ngrams": {
             "bigrams": list(ngrams['bigrams']),
             "trigrams": list(ngrams['trigrams']),
@@ -137,5 +128,4 @@ def preprocess_single_name(
         }
     }
 
-    logger.debug(f"Vector representation: {vector_representation[:5]}... (truncated for display)")
     return result

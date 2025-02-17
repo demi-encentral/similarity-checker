@@ -164,7 +164,7 @@
       "config": [
         {
           "algorithm": "Hash Lookup",
-          "weight": 0.0,
+          "weight": 0.01,
           "min_score": 0,
           "threshold": 1.0,
           "terminates_on_exact_match": false,
@@ -173,7 +173,7 @@
         },
         {
           "algorithm": "Set Intersections",
-          "weight": 0.0,
+          "weight": 0.1,
           "min_score": 0,
           "threshold": 0.3,
           "terminates_on_exact_match": false,
@@ -182,7 +182,7 @@
         },
         {
           "algorithm": "Cosine Distance",
-          "weight": 0.0,
+          "weight": 0.05,
           "min_score": 0,
           "threshold": 0.5,
           "terminates_on_exact_match": false,
@@ -191,7 +191,7 @@
         },
         {
           "algorithm": "Exact Match",
-          "weight": 0.1,
+          "weight": 0.01,
           "min_score": 0,
           "threshold": 1.0,
           "terminates_on_exact_match": false,
@@ -200,7 +200,7 @@
         },
         {
           "algorithm": "Normalized Token Overlap",
-          "weight": 0.15,
+          "weight": 0.2,
           "min_score": 0,
           "threshold": 0.5,
           "terminates_on_exact_match": false,
@@ -209,7 +209,7 @@
         },
         {
           "algorithm": "Token Sort Ratio",
-          "weight": 0.25,
+          "weight": 0.3,
           "min_score": 0,
           "threshold": 0.7,
           "terminates_on_exact_match": false,
@@ -218,7 +218,7 @@
         },
         {
           "algorithm": "Jaccard Similarity",
-          "weight": 0.15,
+          "weight": 0.25,
           "min_score": 0,
           "threshold": 0.5,
           "terminates_on_exact_match": false,
@@ -227,7 +227,7 @@
         },
         {
           "algorithm": "Jaro_Winkler Similarity",
-          "weight": 0.4,
+          "weight": 0.35,
           "min_score": 0,
           "threshold": 0.7,
           "terminates_on_exact_match": false,
@@ -236,7 +236,7 @@
         },
         {
           "algorithm": "Levenshtein Distance",
-          "weight": 0.25,
+          "weight": 0.3,
           "min_score": 0,
           "threshold": 0.7,
           "terminates_on_exact_match": false,

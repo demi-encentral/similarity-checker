@@ -18,35 +18,31 @@
   </head>
   <body>
     <div class="container">
-      <a href="{{ url_for('main.home') }}">&larr; Back</a>
+      <a id="back-btn" href="{{ url_for('main.home') }}">← Back</a>
       <form id="feedbackForm">
         <fieldset>
           <legend>Similarity Checker Demo - Feedback</legend>
           <label>
-            How well did the checker perform:
-            <input
-              type="number"
-              name="rating"
-              min="1"
-              max="5"
-              step="1"
-              placeholder="Rate 1-5"
-              required
-            />
+            Name 1:
+            <input type="text" name="name1" value="" readonly />
           </label>
           <label>
-            What score do you think it should have given:
-            <input
-              type="number"
-              name="suggested_score"
-              min="0"
-              max="1"
-              step="0.01"
-              placeholder="Score 0-1"
-              required
-            />
+            Name 2:
+            <input type="text" name="name2" value="" readonly />
           </label>
-          <button type="submit" class="submit">Submit</button>
+          <label>
+            Rating:
+            <input type="number" name="rating" value="" readonly />
+          </label>
+          <label>
+            Issue:
+            <textarea
+              name="issue"
+              placeholder="Describe the issue"
+              required
+            ></textarea>
+          </label>
+          <button type="submit" class="submit">Report Issue</button>
         </fieldset>
       </form>
       <div class="output">

@@ -7,6 +7,9 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/index.css') }}"
     />
+    <script>
+      window.GOOGLE_FORM_URL = "{{ form_base_url }}";
+    </script>
     <script
       src="{{ url_for('static', filename='js/index.js') }}"
       defer
@@ -17,7 +20,7 @@
     <div class="container">
       <form>
         <fieldset>
-          <legend>Similarity checker</legend>
+          <legend>Name Matcher for NDIC BLMS</legend>
           <label>
             Name 1:
             <input type="text" name="name1" placeholder="Name 1" required />
@@ -35,10 +38,11 @@
           <span class="output__message--first"></span>
           <span class="output__message--second"></span>
           <span class="output__message--third"></span>
+          <span class="output__message--fourth"></span>
         </p>
         <p class="output__message--status"></p>
         <button class="feedback-button" style="display: none">
-          Send Feedback
+          Report unsatisfactory match
         </button>
         <button class="cancel-button" style="display: none">Reset</button>
       </div>

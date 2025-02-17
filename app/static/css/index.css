@@ -69,9 +69,19 @@ input:focus {
   outline: none;
 }
 
-/* input:invalid {
-    border-color: #dc3545;
-  } */
+textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  min-height: 100px; /* Minimum height for better usability */
+  resize: vertical; /* Allows vertical resizing only */
+}
+
+textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
 
 button {
   padding: 10px;

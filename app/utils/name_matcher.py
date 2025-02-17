@@ -79,13 +79,6 @@ class NameMatcher:
 
     def cosine_distance(self, query: Dict, candidate: Dict) -> float:
         """Cosine similarity using vector representations"""
-        if 'vector_representation' not in query or 'vector_representation' not in candidate:
-          logger.debug("Warning: 'vector_representation' missing from one or both inputs.")
-          if 'vector_representation' not in query:
-            logger.debug("Query is missing 'vector_representation'.")
-          if 'vector_representation' not in candidate:
-            logger.debug("Candidate is missing 'vector_representation'.")
-          return False
         query_vector = np.array(query['vector_representation'])
         candidate_vector = np.array(candidate['vector_representation'])
 
@@ -242,9 +235,11 @@ class NameMatcher:
             confidence = ''
             if final_score == 1.0:
                 confidence = 'EXACT MATCH'
-            elif final_score >= 0.7 and final_score < 1.0 :
-                confidence = 'RECOMMENDED'
-            else:
+            elif final_score >= 0.80 and final_score < 1.0 :
+                confidence = 'HIGHLY RECOMMENDED'
+            elif final_score < 0.80 and final_score >= 0.7:
+                confidence = 'MODERATELY RECOMMENDED'
+            else:    
                 confidence = 'NO MATCH'
 
             match_result = {
