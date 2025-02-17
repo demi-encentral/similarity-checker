@@ -1,0 +1,38 @@
+# Compares 2 input names
+from app.utils.file_util import load_json_file
+from app.utils.name_matcher import NameMatcher
+from app.utils.preprocess import preprocess_single_name
+from config import Config
+from logging_config import logger
+
+def compare_input_names(name1: str, name2: str):
+    model_id = Config.MODEL_ID
+    db_data = load_json_file("db.json")
+    alias_map = load_json_file("alias_map.json")
+    titles = load_json_file("titles.json")
+    
+    logger.info(f"\nPreprocessing the first name: {name1}")
+    processed_name1 = preprocess_single_name(name1, alias_map, titles)
+    logger.info(f'processed name1 is {processed_name1}')
+
+    logger.info(f"\nPreprocessing the second name: {name2}")
+    processed_name2 = preprocess_single_name(name2, alias_map, titles)
+    logger.info(f'processed name2 is {processed_name2}')
+
+    # Initialize matcher with model ID
+    matcher = NameMatcher(db_data, [processed_name1], model_id)
+
+    match = matcher.find_matches(processed_name2)
+
+    algorithm_names = matcher.get_phase_2_algorithms()
+
+    # Show results
+    result = {
+        'algorithm_names': algorithm_names,
+        'match': match
+    }
+
+    return result
+
+
+

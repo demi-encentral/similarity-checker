@@ -1,0 +1,93 @@
+Exception on /process [POST]
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 1463, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 872, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 870, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 855, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\app\routes.py", line 19, in process
+    results = compare_names.compare_input_names(name1, name2)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\app\utils\compare_names.py", line 11, in compare_input_names
+    db_data = load_json_file("db.json")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\app\utils\file_util.py", line 16, in load_json_file
+    app.logger.debug(f"Loading {full_path}...")
+    ^^^^^^^^^^
+AttributeError: module 'app' has no attribute 'logger'
+Exception on /process [POST]
+Traceback (most recent call last):
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 1463, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 872, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 870, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\venv\Lib\site-packages\flask\app.py", line 855, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\app\routes.py", line 19, in process
+    results = compare_names.compare_input_names(name1, name2)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\Desktop\encentral\ndic\similarity-checker\app\utils\compare_names.py", line 10, in compare_input_names
+    with current_app.app_context:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'method' object does not support the context manager protocol
+2025-02-17 08:54:15,595 - logging_config - INFO - 
+Preprocessing the first name: daas
+2025-02-17 08:54:15,605 - logging_config - INFO - processed name1 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 'as', 'aa', 's_'], 'trigrams': ['aas', 'as_', 's__', '__d', '_da', 'daa'], 'quadgrams': ['as__', '__da', 's___', '_daa', '___d', 'daas', 'aas_']}}
+2025-02-17 08:54:15,606 - logging_config - INFO - 
+Preprocessing the second name: daas
+2025-02-17 08:54:15,612 - logging_config - INFO - processed name2 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 'as', 'aa', 's_'], 'trigrams': ['aas', 'as_', 's__', '__d', '_da', 'daa'], 'quadgrams': ['as__', '__da', 's___', '_daa', '___d', 'daas', 'aas_']}}
+2025-02-17 08:54:34,988 - logging_config - INFO - 
+Preprocessing the first name: daas
+2025-02-17 08:54:34,993 - logging_config - INFO - processed name1 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 'as', 'aa', 's_'], 'trigrams': ['aas', 'as_', 's__', '__d', '_da', 'daa'], 'quadgrams': ['as__', '__da', 's___', '_daa', '___d', 'daas', 'aas_']}}
+2025-02-17 08:54:34,993 - logging_config - INFO - 
+Preprocessing the second name: mikael
+2025-02-17 08:54:34,998 - logging_config - INFO - processed name2 is {'original_name': 'mikael', 'normalized_name': 'mikael', 'tokens': ['mikael'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['ik', 'ae', 'mi', 'ka', '_m', 'l_', 'el'], 'trigrams': ['_mi', 'ika', 'l__', 'kae', 'mik', 'el_', 'ael', '__m'], 'quadgrams': ['mika', 'l___', '_mik', 'kael', 'ikae', 'ael_', 'el__', '___m', '__mi']}}
+2025-02-17 08:55:03,443 - logging_config - INFO - 
+Preprocessing the first name: saad
+2025-02-17 08:55:03,447 - logging_config - INFO - processed name1 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['aa', 'ad', 'sa', '_s', 'd_'], 'trigrams': ['ad_', 'saa', 'd__', '__s', 'aad', '_sa'], 'quadgrams': ['aad_', '_saa', 'ad__', 'd___', 'saad', '__sa', '___s']}}
+2025-02-17 08:55:03,447 - logging_config - INFO - 
+Preprocessing the second name: saad
+2025-02-17 08:55:03,450 - logging_config - INFO - processed name2 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['aa', 'ad', 'sa', '_s', 'd_'], 'trigrams': ['ad_', 'saa', 'd__', '__s', 'aad', '_sa'], 'quadgrams': ['aad_', '_saa', 'ad__', 'd___', 'saad', '__sa', '___s']}}
+2025-02-17 08:55:05,352 - logging_config - INFO - 
+Preprocessing the first name: saad
+2025-02-17 08:55:05,358 - logging_config - INFO - processed name1 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['aa', 'ad', 'sa', '_s', 'd_'], 'trigrams': ['ad_', 'saa', 'd__', '__s', 'aad', '_sa'], 'quadgrams': ['aad_', '_saa', 'ad__', 'd___', 'saad', '__sa', '___s']}}
+2025-02-17 08:55:05,358 - logging_config - INFO - 
+Preprocessing the second name: saad
+2025-02-17 08:55:05,365 - logging_config - INFO - processed name2 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['aa', 'ad', 'sa', '_s', 'd_'], 'trigrams': ['ad_', 'saa', 'd__', '__s', 'aad', '_sa'], 'quadgrams': ['aad_', '_saa', 'ad__', 'd___', 'saad', '__sa', '___s']}}
+2025-02-17 08:55:55,043 - logging_config - INFO - 
+Preprocessing the first name: saad
+2025-02-17 08:55:55,054 - logging_config - INFO - processed name1 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['ad', 'd_', '_s', 'aa', 'sa'], 'trigrams': ['aad', 'saa', '__s', 'd__', 'ad_', '_sa'], 'quadgrams': ['__sa', '___s', 'd___', 'aad_', '_saa', 'saad', 'ad__']}}
+2025-02-17 08:55:55,054 - logging_config - INFO - 
+Preprocessing the second name: saad
+2025-02-17 08:55:55,060 - logging_config - INFO - processed name2 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['ad', 'd_', '_s', 'aa', 'sa'], 'trigrams': ['aad', 'saa', '__s', 'd__', 'ad_', '_sa'], 'quadgrams': ['__sa', '___s', 'd___', 'aad_', '_saa', 'saad', 'ad__']}}
+2025-02-17 08:56:04,738 - logging_config - INFO - 
+Preprocessing the first name: saad
+2025-02-17 08:56:04,744 - logging_config - INFO - processed name1 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['ad', 'd_', '_s', 'aa', 'sa'], 'trigrams': ['aad', 'saa', '__s', 'd__', 'ad_', '_sa'], 'quadgrams': ['__sa', '___s', 'd___', 'aad_', '_saa', 'saad', 'ad__']}}
+2025-02-17 08:56:04,745 - logging_config - INFO - 
+Preprocessing the second name: saad
+2025-02-17 08:56:04,751 - logging_config - INFO - processed name2 is {'original_name': 'saad', 'normalized_name': 'saad', 'tokens': ['saad'], 'vector_representation': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['ad', 'd_', '_s', 'aa', 'sa'], 'trigrams': ['aad', 'saa', '__s', 'd__', 'ad_', '_sa'], 'quadgrams': ['__sa', '___s', 'd___', 'aad_', '_saa', 'saad', 'ad__']}}
+2025-02-17 09:00:53,500 - logging_config - INFO - 
+Preprocessing the first name: daas
+2025-02-17 09:00:53,506 - logging_config - INFO - processed name1 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 's_', 'as', 'aa'], 'trigrams': ['aas', '_da', '__d', 's__', 'as_', 'daa'], 'quadgrams': ['__da', 'aas_', '___d', 'daas', 's___', '_daa', 'as__']}}
+2025-02-17 09:00:53,507 - logging_config - INFO - 
+Preprocessing the second name: daas
+2025-02-17 09:00:53,512 - logging_config - INFO - processed name2 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 's_', 'as', 'aa'], 'trigrams': ['aas', '_da', '__d', 's__', 'as_', 'daa'], 'quadgrams': ['__da', 'aas_', '___d', 'daas', 's___', '_daa', 'as__']}}
+2025-02-17 09:01:56,190 - logging_config - INFO - 
+Preprocessing the first name: daas
+2025-02-17 09:01:56,199 - logging_config - INFO - processed name1 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 's_', 'as', 'aa'], 'trigrams': ['aas', '_da', '__d', 's__', 'as_', 'daa'], 'quadgrams': ['__da', 'aas_', '___d', 'daas', 's___', '_daa', 'as__']}}
+2025-02-17 09:01:56,200 - logging_config - INFO - 
+Preprocessing the second name: daas
+2025-02-17 09:01:56,205 - logging_config - INFO - processed name2 is {'original_name': 'daas', 'normalized_name': 'daas', 'tokens': ['daas'], 'vector_representation': [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'ngrams': {'bigrams': ['_d', 'da', 's_', 'as', 'aa'], 'trigrams': ['aas', '_da', '__d', 's__', 'as_', 'daa'], 'quadgrams': ['__da', 'aas_', '___d', 'daas', 's___', '_daa', 'as__']}}

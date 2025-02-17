@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/index.css') }}"
+    />
+    <script
+      src="{{ url_for('static', filename='js/index.js') }}"
+      defer
+    ></script>
+    <title>Checker Demo</title>
+  </head>
+  <body>
+    <div class="container">
+      <form>
+        <fieldset>
+          <legend>Similarity checker</legend>
+          <label>
+            Name 1:
+            <input type="text" name="name1" placeholder="Name 1" required />
+          </label>
+          <label>
+            Name 2:
+            <input type="text" name="name2" placeholder="Name 2" required />
+          </label>
+          <button class="submit">Submit</button>
+        </fieldset>
+      </form>
+
+      <div class="output">
+        <p class="output-message">
+          <span class="output__message--first"></span>
+          <span class="output__message--second"></span>
+          <span class="output__message--third"></span>
+        </p>
+        <p class="output__message--status"></p>
+        <button class="feedback-button" style="display: none">
+          Send Feedback
+        </button>
+        <button class="cancel-button" style="display: none">Reset</button>
+      </div>
+    </div>
+  </body>
+</html>
