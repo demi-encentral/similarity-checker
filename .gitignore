@@ -25,9 +25,6 @@ wheels/
 venv/
 ENV/
 
-# Environment Variables
-.env
-
 # IDE
 .idea/
 .vscode/
