@@ -98,7 +98,7 @@ class NameMatcher:
             # Check for explicit initial mismatches
             for initial in initials_to_check:
                 if check_initial_mismatch(initial, c_tokens):
-                    return 0.7  # Strong penalty for definite initial mismatch
+                    return 0.75  # Strong penalty for definite initial mismatch
                 
                 # Add any matching full tokens
                 for cand_token in c_tokens:
@@ -121,8 +121,8 @@ class NameMatcher:
         score2 = calculate_subset_score(candidate_tokens, query_tokens)
 
         # Take the higher score unless one direction shows a definite initial mismatch
-        if score1 == 0.7 or score2 == 0.7:
-            return 0.7
+        if score1 == 0.75 or score2 == 0.75:
+            return 0.75
         return max(score1, score2)
 
 
