@@ -4,7 +4,6 @@ import numpy as np
 from collections import defaultdict
 from jarowinkler import jarowinkler_similarity as jaro_winkler
 from rapidfuzz import fuzz
-import pandas as pd
 from logging_config import logger
 
 class NameMatcher:
@@ -57,7 +56,79 @@ class NameMatcher:
 
         logger.debug(f"Hash lookup - Token overlap: {token_overlap}, Bigram similarity: {bigram_similarity:.3f}")
         return bigram_similarity
+    
+  
+    def is_initial(self, token: str) -> bool:
+        return len(token) == 1 and token.isalpha()
 
+    
+    def subset_name_similarity(self, query: Dict, candidate: Dict) -> float:
+        """
+        Calculate similarity score for names where one might be a subset of the other,
+        considering initials and penalizing typos more leniently while also penalizing 
+        differing initials. This method checks both directions for subset relationship 
+        with improved initial matching and typo tolerance, regardless of token order.
+
+        :param query: Dictionary containing tokens and normalized name of the query name
+        :param candidate: Dictionary containing tokens and normalized name of the candidate name
+        :return: Similarity score between 0 and 1
+        """
+
+        def check_initial_mismatch(initial: str, full_tokens: set) -> bool:
+            """
+            Check if an initial explicitly mismatches any full token's first letter.
+            Returns True if we find a token that definitely doesn't match this initial.
+            """
+            for token in full_tokens:
+                if len(token) > 1 and token.lower().startswith(initial.lower()):
+                    return False  # Found a matching token
+            return True  # No matching token found
+
+        def calculate_subset_score(q_tokens: set, c_tokens: set) -> float:
+            expanded_query_tokens = set()
+            initials_to_check = set()
+            
+            # First pass: separate initials and non-initials
+            for token in q_tokens:
+                if self.is_initial(token):
+                    initials_to_check.add(token)
+                else:
+                    expanded_query_tokens.add(token)
+            
+            # Check for explicit initial mismatches
+            for initial in initials_to_check:
+                if check_initial_mismatch(initial, c_tokens):
+                    return 0.7  # Strong penalty for definite initial mismatch
+                
+                # Add any matching full tokens
+                for cand_token in c_tokens:
+                    if len(cand_token) > 1 and cand_token.lower().startswith(initial.lower()):
+                        expanded_query_tokens.add(cand_token)
+                        break
+            
+            # Check if remaining tokens form a subset
+            if expanded_query_tokens.issubset(c_tokens):
+                if not initials_to_check:
+                    return 1.0  # Perfect match without initials
+                return 0.9  # Good match with matching initials
+            
+            # Calculate fuzzy match score for non-subset cases
+            return fuzz.partial_ratio(query['normalized_name'], 
+                                    candidate['normalized_name']) / 100.0
+
+        query_tokens, candidate_tokens = set(query['tokens']), set(candidate['tokens'])
+        score1 = calculate_subset_score(query_tokens, candidate_tokens)
+        score2 = calculate_subset_score(candidate_tokens, query_tokens)
+
+        # Take the higher score unless one direction shows a definite initial mismatch
+        if score1 == 0.7 or score2 == 0.7:
+            return 0.7
+        return max(score1, score2)
+
+
+    def is_initial(self, token: str) -> bool:
+        return len(token) == 1 and token.isalpha() 
+    
     def set_intersections(self, query: Dict, candidate: Dict) -> float:
         """Set intersection using n-grams"""
         # Use all n-gram types for more comprehensive comparison
@@ -185,40 +256,37 @@ class NameMatcher:
             threshold = algorithm['version']['threshold']
             score = func(query, candidate)
             scores[algorithm['name']] = score
-            if algorithm['version'].get('terminates_on_exact_match', False) and score >= threshold:
+            if score >= threshold:
+                logger.debug(f"Threshold met by {algorithm['name']}, terminating scoring with score {score:.3f}")
+                return score, scores  # Use this score directly instead of weighted average
+            if algorithm['version'].get('terminates_on_exact_match', False) and score == 1.0:
                 logger.debug(f"Exact match found in {algorithm['name']}, terminating scoring")
                 return 1.0, scores
             total_score += score * weight
             total_weight += weight
         final_score = total_score / total_weight if total_weight > 0 else 0.0
+        logger.debug(f"No algorithm met threshold, using weighted average: {final_score:.3f}")
         return final_score, scores
-    
-    def get_phase_1_algorithms(self) -> List[str]:
-        return self.phase1_algorithms
-    
-    def get_phase_2_algorithms(self) -> List[str]:
-        return self.phase2_algorithms
 
     def find_matches(self, query_name: Dict) -> List[Dict]:
-        # This method remains mostly unchanged, but you might want to adjust how you determine the model version if needed.
-        # Here, we assume you're passing the model_version_id when instantiating NameMatcher.
         matches = []
         logger.debug(f"\nProcessing query name: {query_name['original_name']}")
         logger.debug(f"\nMax number of matches: {self.max_number_of_matches}")
+        
         # Step 1: Check for exact match
-        # for candidate in self.names:
-        #     if candidate['original_name'] == query_name['original_name']:
-        #         match_result = {
-        #             'candidate_name': candidate['original_name'],
-        #             'final_score': 1.0,
-        #             'algorithm_scores': {'Exactly equals': 1.0},
-        #             'confidence': 'EXACT'
-        #         }
-        #         matches.append(match_result)
-        #         self.names.remove(candidate)  # Remove exact match from further processing
-        #         if len(matches) >= self.max_number_of_matches:
-        #           logger.debug(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
-        #           return matches
+        for candidate in self.names:
+            if candidate['original_name'] == query_name['original_name']:
+                match_result = {
+                    'candidate_name': candidate['original_name'],
+                    'final_score': 1.0,
+                    'algorithm_scores': {'Exactly equals': 1.0},
+                    'confidence': 'RECOMMENDED'
+                }
+                matches.append(match_result)
+                self.names.remove(candidate)  # Remove exact match from further processing
+                if len(matches) >= self.max_number_of_matches:
+                    logger.debug(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
+                    return matches
 
         # Step 2: Phase 1 filtering
         phase1_candidates = []
@@ -235,9 +303,9 @@ class NameMatcher:
             confidence = ''
             if final_score == 1.0:
                 confidence = 'EXACT MATCH'
-            elif final_score >= 0.80 and final_score < 1.0 :
+            elif final_score >= 0.80:
                 confidence = 'HIGHLY RECOMMENDED'
-            elif final_score < 0.80 and final_score >= 0.7:
+            elif final_score >= 0.70:
                 confidence = 'MODERATELY RECOMMENDED'
             else:    
                 confidence = 'NO MATCH'
@@ -252,14 +320,19 @@ class NameMatcher:
 
             matches.append(match_result)
             if len(matches) >= self.max_number_of_matches:
-              logger.debug(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
-              break
+                logger.debug(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
+                break
 
-        # Sort matches by score in descending order
-        # matches.sort(key=lambda x: x['final_score'], reverse=True)
-        # Only one match
-        return matches[0]
+        # Return only one match since max_number_of_matches is set to 1 for mv003
+        return matches[0] if matches else None
+    
+    def get_phase_1_algorithms(self) -> List[str]:
+        return self.phase1_algorithms
+    
+    def get_phase_2_algorithms(self) -> List[str]:
+        return self.phase2_algorithms
 
+   
 
 
 def print_matching_results(results: List[Dict]):

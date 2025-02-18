@@ -32,6 +32,8 @@ ENV/
 *.log
 *.swo
 
+app.log
+
 # OS
 .DS_Store
 Thumbs.db
