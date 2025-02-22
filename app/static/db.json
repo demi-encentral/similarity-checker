@@ -175,7 +175,7 @@
           "algorithm": "Set Intersections",
           "weight": 0.1,
           "min_score": 0,
-          "threshold": 0.8,
+          "threshold": 0.9,
           "terminates_on_exact_match": true,
           "contributes_to_score": true,
           "execution_order": 2
@@ -211,7 +211,7 @@
           "algorithm": "Token Sort Ratio",
           "weight": 0.3,
           "min_score": 0,
-          "threshold": 0.8,
+          "threshold": 0.9,
           "terminates_on_exact_match": true,
           "contributes_to_score": true,
           "execution_order": 6
@@ -229,7 +229,7 @@
           "algorithm": "Jaro_Winkler Similarity",
           "weight": 0.3,
           "min_score": 0,
-          "threshold": 0.85,
+          "threshold": 0.9,
           "terminates_on_exact_match": true,
           "contributes_to_score": true,
           "execution_order": 8

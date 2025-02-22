@@ -5,6 +5,7 @@ from collections import defaultdict
 from jarowinkler import jarowinkler_similarity as jaro_winkler
 from rapidfuzz import fuzz
 from logging_config import logger
+from scipy.optimize import linear_sum_assignment
 
 class NameMatcher:
     def __init__(self, config: Dict, preprocessed_names: List[Dict], model_version_id: str):
@@ -56,78 +57,83 @@ class NameMatcher:
 
         logger.debug(f"Hash lookup - Token overlap: {token_overlap}, Bigram similarity: {bigram_similarity:.3f}")
         return bigram_similarity
-    
-  
-    def is_initial(self, token: str) -> bool:
-        return len(token) == 1 and token.isalpha()
 
-    
-    def subset_name_similarity(self, query: Dict, candidate: Dict) -> float:
-        """
-        Calculate similarity score for names where one might be a subset of the other,
-        considering initials and penalizing typos more leniently while also penalizing 
-        differing initials. This method checks both directions for subset relationship 
-        with improved initial matching and typo tolerance, regardless of token order.
 
-        :param query: Dictionary containing tokens and normalized name of the query name
-        :param candidate: Dictionary containing tokens and normalized name of the candidate name
-        :return: Similarity score between 0 and 1
-        """
 
-        def check_initial_mismatch(initial: str, full_tokens: set) -> bool:
-            """
-            Check if an initial explicitly mismatches any full token's first letter.
-            Returns True if we find a token that definitely doesn't match this initial.
-            """
-            for token in full_tokens:
-                if len(token) > 1 and token.lower().startswith(initial.lower()):
-                    return False  # Found a matching token
-            return True  # No matching token found
-
-        def calculate_subset_score(q_tokens: set, c_tokens: set) -> float:
-            expanded_query_tokens = set()
-            initials_to_check = set()
+    def subset_name_similarity(self, query: Dict, candidate: Dict, edit_penalty=0.05, typo_threshold=0.9) -> float:
+        query_tokens = query['tokens']
+        candidate_tokens = candidate['tokens']
+        query_len = len(query_tokens)
+        candidate_len = len(candidate_tokens)
+        max_tokens = max(query_len, candidate_len)
+        min_tokens = min(query_len, candidate_len)
+        
+        print(f"Query tokens: {query_tokens}")
+        print(f"Candidate tokens: {candidate_tokens}")
+        print(f"Query len: {query_len}, Candidate len: {candidate_len}, Max tokens: {max_tokens}")
+        
+        if query_len == 0 and candidate_len == 0:
+            return 1.0
+        if query_len == 0 or candidate_len == 0:
+            return 0.0
+        
+        def compare_tokens(token1, token2):
+            token1, token2 = token1.lower(), token2.lower()
             
-            # First pass: separate initials and non-initials
-            for token in q_tokens:
-                if self.is_initial(token):
-                    initials_to_check.add(token)
-                else:
-                    expanded_query_tokens.add(token)
+            if token1 == token2:
+                print(f"Exact match for {token1} and {token2}: 1.0")
+                return 1.0
             
-            # Check for explicit initial mismatches
-            for initial in initials_to_check:
-                if check_initial_mismatch(initial, c_tokens):
-                    return 0.7  # Strong penalty for definite initial mismatch
-                
-                # Add any matching full tokens
-                for cand_token in c_tokens:
-                    if len(cand_token) > 1 and cand_token.lower().startswith(initial.lower()):
-                        expanded_query_tokens.add(cand_token)
-                        break
+            if len(token1) == 1 or len(token2) == 1:
+                is_match = token1[0] == token2[0]
+                score = 1.0 if is_match else 0.0
+                print(f"Initial comparison for {token1} and {token2}: {score}")
+                return score
             
-            # Check if remaining tokens form a subset
-            if expanded_query_tokens.issubset(c_tokens):
-                if not initials_to_check:
-                    return 1.0  # Perfect match without initials
-                return 0.9  # Good match with matching initials
+            similarity_ratio = fuzz.ratio(token1, token2) / 100.0
+            max_len = max(len(token1), len(token2))
+            edit_distance = round((1.0 - similarity_ratio) * max_len)
+            similarity = 1.0 - (edit_distance * edit_penalty)
+            similarity = max(0.0, similarity)
             
-            # Calculate fuzzy match score for non-subset cases
-            return fuzz.partial_ratio(query['normalized_name'], 
-                                    candidate['normalized_name']) / 100.0
-
-        query_tokens, candidate_tokens = set(query['tokens']), set(candidate['tokens'])
-        score1 = calculate_subset_score(query_tokens, candidate_tokens)
-        score2 = calculate_subset_score(candidate_tokens, query_tokens)
-
-        # Take the higher score unless one direction shows a definite initial mismatch
-        if score1 == 0.7 or score2 == 0.7:
-            return 0.7
-        return max(score1, score2)
-
-
-    def is_initial(self, token: str) -> bool:
-        return len(token) == 1 and token.isalpha() 
+            print(f"Edit distance penalty for {token1} and {token2}: {similarity} (edit distance: {edit_distance})")
+            return similarity
+        
+        similarity_matrix = np.zeros((query_len, candidate_len))
+        for i, q_token in enumerate(query_tokens):
+            for j, c_token in enumerate(candidate_tokens):
+                similarity_matrix[i, j] = compare_tokens(q_token, c_token)
+        
+        print("Similarity matrix:\n" + str(similarity_matrix))
+        
+        row_ind, col_ind = linear_sum_assignment(-similarity_matrix)
+        matched_pairs = [(query_tokens[i], candidate_tokens[j], similarity_matrix[i, j]) for i, j in zip(row_ind, col_ind)]
+        total_similarity = similarity_matrix[row_ind, col_ind].sum()
+        
+        print(f"Matched pairs: {matched_pairs}")
+        
+        # Subset check: exact matches only
+        shorter_len = min_tokens
+        shorter_is_query = query_len < candidate_len
+        shorter_matched = len(row_ind) if shorter_is_query else len(col_ind)
+        all_exact_matches = all(score == 1.0 for _, _, score in matched_pairs)
+        
+        if shorter_matched == shorter_len and all_exact_matches:
+            print(f"{'Query' if shorter_is_query else 'Candidate'} is a perfect subset: returning 1.0")
+            return 1.0
+        
+        # Non-subset scoring
+        matched_token_count = len(matched_pairs)
+        similarity = total_similarity / matched_token_count
+        if matched_token_count < max_tokens:
+            unmatched_penalty = (max_tokens - matched_token_count) * 0.05
+            similarity = max(0.0, similarity - unmatched_penalty)
+        
+        similarity = round(similarity, 4)  
+        print(f"Total similarity: {total_similarity}")
+        print(f"Matched token count: {matched_token_count}")
+        print(f"Final similarity score: {similarity}")
+        return similarity
     
     def set_intersections(self, query: Dict, candidate: Dict) -> float:
         """Set intersection using n-grams"""
