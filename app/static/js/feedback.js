@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 formData.append(key, value);
             }
             
+            for (const [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
             // Send POST request to Google Forms endpoint
             const response = await fetch(GOOGLE_FORM_BASE_URL, {
                 method: 'POST',
@@ -76,6 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 'entry.938705946': issue  // Issue field
             })) {
                 formData.append(key, value);
+            }
+            for (const [key, value] of formData.entries()) {
+                console.log(key, value);
             }
             
             const response = await fetch(GOOGLE_FORM_BASE_URL, {

@@ -1,11 +1,9 @@
-import json
+from scipy.optimize import linear_sum_assignment
 from typing import List, Dict, Tuple, Set
 import numpy as np
 from collections import defaultdict
 from jarowinkler import jarowinkler_similarity as jaro_winkler
 from rapidfuzz import fuzz
-from logging_config import logger
-from scipy.optimize import linear_sum_assignment
 
 class NameMatcher:
     def __init__(self, config: Dict, preprocessed_names: List[Dict], model_version_id: str):
@@ -36,6 +34,7 @@ class NameMatcher:
         # Sort algorithms by execution order within each phase
         self.phase1_algorithms.sort(key=lambda x: x['execution_order'])
         self.phase2_algorithms.sort(key=lambda x: x['execution_order'])
+        print(f"Setting up Name matcher for model: {self.model_version_id} with {len(self.phase1_algorithms)} algorithms in phase 1 and {len(self.phase2_algorithms)} algorithms in phase 2")
 
 
     def hash_lookup(self, query: Dict, candidate: Dict) -> float:
@@ -46,7 +45,7 @@ class NameMatcher:
         token_overlap = len(query_tokens.intersection(candidate_tokens))
 
         if token_overlap == 0:
-            logger.debug("Hash lookup: No token overlap")
+            print("Hash lookup: No token overlap")
             return 0
 
         # Check bigram overlap
@@ -55,86 +54,9 @@ class NameMatcher:
         bigram_overlap = len(query_bigrams.intersection(candidate_bigrams))
         bigram_similarity = bigram_overlap / max(len(query_bigrams), len(candidate_bigrams))
 
-        logger.debug(f"Hash lookup - Token overlap: {token_overlap}, Bigram similarity: {bigram_similarity:.3f}")
+        print(f"Hash lookup - Token overlap: {token_overlap}, Bigram similarity: {bigram_similarity:.3f}")
         return bigram_similarity
 
-
-
-    def subset_name_similarity(self, query: Dict, candidate: Dict, edit_penalty=0.05, typo_threshold=0.9) -> float:
-        query_tokens = query['tokens']
-        candidate_tokens = candidate['tokens']
-        query_len = len(query_tokens)
-        candidate_len = len(candidate_tokens)
-        max_tokens = max(query_len, candidate_len)
-        min_tokens = min(query_len, candidate_len)
-        
-        print(f"Query tokens: {query_tokens}")
-        print(f"Candidate tokens: {candidate_tokens}")
-        print(f"Query len: {query_len}, Candidate len: {candidate_len}, Max tokens: {max_tokens}")
-        
-        if query_len == 0 and candidate_len == 0:
-            return 1.0
-        if query_len == 0 or candidate_len == 0:
-            return 0.0
-        
-        def compare_tokens(token1, token2):
-            token1, token2 = token1.lower(), token2.lower()
-            
-            if token1 == token2:
-                print(f"Exact match for {token1} and {token2}: 1.0")
-                return 1.0
-            
-            if len(token1) == 1 or len(token2) == 1:
-                is_match = token1[0] == token2[0]
-                score = 1.0 if is_match else 0.0
-                print(f"Initial comparison for {token1} and {token2}: {score}")
-                return score
-            
-            similarity_ratio = fuzz.ratio(token1, token2) / 100.0
-            max_len = max(len(token1), len(token2))
-            edit_distance = round((1.0 - similarity_ratio) * max_len)
-            similarity = 1.0 - (edit_distance * edit_penalty)
-            similarity = max(0.0, similarity)
-            
-            print(f"Edit distance penalty for {token1} and {token2}: {similarity} (edit distance: {edit_distance})")
-            return similarity
-        
-        similarity_matrix = np.zeros((query_len, candidate_len))
-        for i, q_token in enumerate(query_tokens):
-            for j, c_token in enumerate(candidate_tokens):
-                similarity_matrix[i, j] = compare_tokens(q_token, c_token)
-        
-        print("Similarity matrix:\n" + str(similarity_matrix))
-        
-        row_ind, col_ind = linear_sum_assignment(-similarity_matrix)
-        matched_pairs = [(query_tokens[i], candidate_tokens[j], similarity_matrix[i, j]) for i, j in zip(row_ind, col_ind)]
-        total_similarity = similarity_matrix[row_ind, col_ind].sum()
-        
-        print(f"Matched pairs: {matched_pairs}")
-        
-        # Subset check: exact matches only
-        shorter_len = min_tokens
-        shorter_is_query = query_len < candidate_len
-        shorter_matched = len(row_ind) if shorter_is_query else len(col_ind)
-        all_exact_matches = all(score == 1.0 for _, _, score in matched_pairs)
-        
-        if shorter_matched == shorter_len and all_exact_matches:
-            print(f"{'Query' if shorter_is_query else 'Candidate'} is a perfect subset: returning 1.0")
-            return 1.0
-        
-        # Non-subset scoring
-        matched_token_count = len(matched_pairs)
-        similarity = total_similarity / matched_token_count
-        if matched_token_count < max_tokens:
-            unmatched_penalty = (max_tokens - matched_token_count) * 0.05
-            similarity = max(0.0, similarity - unmatched_penalty)
-        
-        similarity = round(similarity, 4)  
-        print(f"Total similarity: {total_similarity}")
-        print(f"Matched token count: {matched_token_count}")
-        print(f"Final similarity score: {similarity}")
-        return similarity
-    
     def set_intersections(self, query: Dict, candidate: Dict) -> float:
         """Set intersection using n-grams"""
         # Use all n-gram types for more comprehensive comparison
@@ -151,7 +73,7 @@ class NameMatcher:
                 similarities.append(intersection / union)
 
         avg_similarity = sum(similarities) / len(similarities)
-        logger.debug(f"Set intersection similarity: {avg_similarity:.3f}")
+        print(f"Set intersection similarity: {avg_similarity:.3f}")
         return avg_similarity
 
     def cosine_distance(self, query: Dict, candidate: Dict) -> float:
@@ -167,14 +89,14 @@ class NameMatcher:
             return 0
 
         similarity = dot_product / norm_product
-        logger.debug(f"Cosine similarity: {similarity:.3f}")
+        print(f"Cosine similarity: {similarity:.3f}")
         return similarity
 
     def exact_match(self, query: Dict, candidate: Dict) -> float:
         """Check for exact token match"""
         is_match = sorted(query['tokens']) == sorted(candidate['tokens'])
         score = 1.0 if is_match else 0.0
-        logger.debug(f"Exact match score: {score}")
+        print(f"Exact match score: {score}")
         return score
 
     def normalized_token_overlap(self, query: Dict, candidate: Dict) -> float:
@@ -195,14 +117,14 @@ class NameMatcher:
 
         # Combine scores (giving more weight to token-level overlap)
         final_score = 0.6 * token_score + 0.4 * (sum(gram_scores) / len(gram_scores))
-        logger.debug(f"Token overlap score: {final_score:.3f}")
+        print(f"Token overlap score: {final_score:.3f}")
         return final_score
 
     def token_sort_ratio(self, query: Dict, candidate: Dict) -> float:
         """Calculate token sort ratio using normalized names"""
         score = fuzz.token_sort_ratio(query['normalized_name'],
                                     candidate['normalized_name']) / 100.0
-        logger.debug(f"Token sort ratio: {score:.3f}")
+        print(f"Token sort ratio: {score:.3f}")
         return score
 
     def jaccard_similarity(self, query: Dict, candidate: Dict) -> float:
@@ -224,32 +146,187 @@ class NameMatcher:
 
         # Combine scores
         final_score = 0.5 * token_jaccard + 0.5 * (sum(gram_scores) / len(gram_scores))
-        logger.debug(f"Jaccard similarity: {final_score:.3f}")
+        print(f"Jaccard similarity: {final_score:.3f}")
         return final_score
 
     def jaro_winkler_similarity(self, query: Dict, candidate: Dict) -> float:
         """Calculate Jaro-Winkler similarity using normalized names"""
         score = jaro_winkler(query['normalized_name'],
                                 candidate['normalized_name'])
-        logger.debug(f"Jaro-Winkler similarity: {score:.3f}")
+        print(f"Jaro-Winkler similarity: {score:.3f}")
         return score
 
     def levenshtein_distance(self, query: Dict, candidate: Dict) -> float:
         """Calculate normalized Levenshtein similarity"""
         score = fuzz.ratio(query['normalized_name'],
                          candidate['normalized_name']) / 100.0
-        logger.debug(f"Levenshtein similarity: {score:.3f}")
+        print(f"Levenshtein similarity: {score:.3f}")
         return score
+    
+    def edit_distance(self, s1: str, s2: str) -> int:
+        """Compute the Levenshtein edit distance between s1 and s2."""
+        m, n = len(s1), len(s2)
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(m + 1):
+            dp[i][0] = i
+        for j in range(n + 1):
+            dp[0][j] = j
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                cost = 0 if s1[i - 1] == s2[j - 1] else 1
+                dp[i][j] = min(
+                    dp[i - 1][j] + 1,     # deletion
+                    dp[i][j - 1] + 1,     # insertion
+                    dp[i - 1][j - 1] + cost  # substitution
+                )
+        return dp[m][n]
+    
+    def subset_name_similarity(self, query: dict, candidate: dict, penalty_per_edit=0.1, unmatched_penalty=0.01, start_letter_penalty=0.25, initial_match_score=0.9, threshold=0.7) -> float:
+        """
+        Calculate an improved similarity score between two names using exact Levenshtein distance.
+        Matches tokens greedily, penalizes typos, accounts for unmatched tokens, applies a penalty
+        for mismatched starting letters in non-exact matches, and handles initials intelligently.
 
+        Args:
+            query (dict): Dictionary with 'tokens' key (list of strings) for the query name.
+            candidate (dict): Dictionary with 'tokens' key (list of strings) for the candidate name.
+            penalty_per_edit (float): Penalty multiplier per edit distance (default 0.1).
+            unmatched_penalty (float): Penalty per unmatched token in the larger set (default 0.01).
+            start_letter_penalty (float): Penalty for mismatched starting letters in non-exact matches (default 0.05).
+            initial_match_score (float): Similarity score for a full name matching an initial (default 0.9).
+            threshold (float): Minimum similarity for non-initial matches to override initial matching (default 0.7).
 
+        Returns:
+            float: Similarity score between 0.0 and 1.0.
+        """
+        query_tokens = query.get('tokens', [])
+        candidate_tokens = candidate.get('tokens', [])
+        
+        print("Query tokens:", query_tokens)
+        print("Candidate tokens:", candidate_tokens)
+        
+        # Handle edge cases
+        if not query_tokens and not candidate_tokens:
+            print("Both names are empty. Returning 1.0")
+            return 1.0
+        if not query_tokens or not candidate_tokens:
+            print("One of the names is empty. Returning 0.0")
+            return 0.0
+
+        # Determine smaller and larger token sets
+        if len(query_tokens) <= len(candidate_tokens):
+            smaller_tokens = query_tokens
+            larger_tokens = candidate_tokens.copy()
+        else:
+            smaller_tokens = candidate_tokens
+            larger_tokens = query_tokens.copy()
+        
+        print("Using smaller token set:", smaller_tokens)
+        
+        # Helper function to check if a token is an initial
+        def is_initial(token):
+            return len(token) == 1 and token.isalpha()
+
+        # Match tokens greedily
+        total_similarity = 0.0
+        matched_indices = []
+        all_exact_matches = True  # Track if all matches are exact
+        max_non_initial_similarity = 0.0  # Track highest non-initial match
+        
+        for token in smaller_tokens:
+            best_similarity = 0.0
+            best_index = None
+            best_distance = float('inf')
+            best_candidate = None
+            best_is_initial_match = False  # Track if best match is an initial match
+            print(f"Matching token '{token}' against candidates: {larger_tokens}")
+            
+            for i, cand_token in enumerate(larger_tokens):
+                if i in matched_indices:
+                    continue
+                # Check for initial matching
+                if is_initial(token) and not is_initial(cand_token):
+                    similarity = initial_match_score if cand_token[0].lower() == token.lower() else 0.0
+                    is_initial_match = True
+                elif not is_initial(token) and is_initial(cand_token):
+                    similarity = initial_match_score if token[0].lower() == cand_token.lower() else 0.0
+                    is_initial_match = True
+                else:
+                    # Standard edit distance-based similarity
+                    distance = self.edit_distance(token.lower(), cand_token.lower())
+                    if distance == 0:
+                        similarity = 1.0
+                    else:
+                        similarity = max(0.0, 1.0 - (distance * penalty_per_edit))
+                        # Track max non-initial similarity
+                        max_non_initial_similarity = max(max_non_initial_similarity, similarity)
+                    is_initial_match = False
+                
+                print(f"  Comparing '{token}' with '{cand_token}': similarity = {similarity:.3f}{' (initial match)' if is_initial_match else ''}")
+                if similarity > best_similarity:
+                    best_similarity = similarity
+                    best_index = i
+                    best_distance = distance if not is_initial_match else 0  # Initial matches don’t use distance
+                    best_candidate = cand_token
+                    best_is_initial_match = is_initial_match
+            
+            if best_index is not None:
+                print(f"Best match for '{token}' is '{larger_tokens[best_index]}' with similarity {best_similarity:.3f}")
+                matched_indices.append(best_index)
+                if best_distance > 0:  # Non-exact match
+                    all_exact_matches = False
+                    if not best_is_initial_match and token and best_candidate and token[0].lower() != best_candidate[0].lower():
+                        letter_penalty = start_letter_penalty
+                        best_similarity = max(0.0, best_similarity - letter_penalty)
+                        print(f"  Start letter mismatch ('{token[0]}' vs '{best_candidate[0]}'), applying penalty: {letter_penalty:.3f}, adjusted similarity: {best_similarity:.3f}")
+                # Adjust for initial match: only use if no strong non-initial match
+                if best_is_initial_match and max_non_initial_similarity >= threshold:
+                    # Revert to best non-initial match if it exists and exceeds threshold
+                    for i, cand_token in enumerate(larger_tokens):
+                        if i in matched_indices and i != best_index:
+                            continue
+                        distance = self.edit_distance(token.lower(), cand_token.lower())
+                        similarity = 1.0 if distance == 0 else max(0.0, 1.0 - (distance * penalty_per_edit))
+                        if similarity > best_similarity and similarity >= threshold:
+                            best_similarity = similarity
+                            best_index = i
+                            best_candidate = cand_token
+                            best_is_initial_match = False
+                            matched_indices[-1] = best_index  # Update the match
+                            print(f"  Overriding initial match with stronger non-initial match '{cand_token}' at {best_similarity:.3f}")
+                            break
+                total_similarity += best_similarity
+            else:
+                print(f"No match found for token '{token}'")
+                all_exact_matches = False
+                total_similarity += best_similarity
+        
+        # Base similarity based on smaller token set
+        base_similarity = total_similarity / len(smaller_tokens) if smaller_tokens else 0.0
+        
+        # Penalize unmatched tokens in the larger set, but skip if all smaller tokens match exactly
+        num_unmatched = len(larger_tokens) - len(matched_indices)
+        unmatched_penalty_total = 0.0
+        if not all_exact_matches:
+            unmatched_penalty_total = num_unmatched * unmatched_penalty
+        print(f"Number of unmatched tokens: {num_unmatched}, Unmatched penalty: {unmatched_penalty_total:.3f}")
+        
+        # Final score
+        final_similarity = max(0.0, base_similarity - unmatched_penalty_total)
+        print(f"Base similarity: {base_similarity:.3f}")
+        print(f"Final similarity score: {final_similarity:.3f}")
+        return round(final_similarity, 3)
+
+    
+    
     def apply_phase1_filters(self, query: Dict, candidate: Dict) -> bool:
         for algorithm in self.phase1_algorithms:
             min_score = algorithm['version']['min_score']
             func = getattr(self, algorithm['name'].lower().replace(' ', '_'))
             if func(query, candidate) < min_score:
-                logger.debug(f"Failed {algorithm['name']} filter")
+                print(f"Failed {algorithm['name']} filter")
                 return False
-        logger.debug("Passed all Phase 1 filters")
+        print("Passed all Phase 1 filters")
         return True
 
     def calculate_phase2_scores(self, query: Dict, candidate: Dict) -> Tuple[float, Dict[str, float]]:
@@ -262,22 +339,20 @@ class NameMatcher:
             threshold = algorithm['version']['threshold']
             score = func(query, candidate)
             scores[algorithm['name']] = score
-            if score >= threshold:
-                logger.debug(f"Threshold met by {algorithm['name']}, terminating scoring with score {score:.3f}")
+            if algorithm['version'].get('terminates_on_exact_match', False) and score >= threshold:
+                print(f"Threshold met by {algorithm['name']}, terminating scoring with score {score:.3f}")
                 return score, scores  # Use this score directly instead of weighted average
-            if algorithm['version'].get('terminates_on_exact_match', False) and score == 1.0:
-                logger.debug(f"Exact match found in {algorithm['name']}, terminating scoring")
-                return 1.0, scores
+            
             total_score += score * weight
             total_weight += weight
         final_score = total_score / total_weight if total_weight > 0 else 0.0
-        logger.debug(f"No algorithm met threshold, using weighted average: {final_score:.3f}")
+        print(f"No algorithm met threshold, using weighted average: {final_score:.3f}")
         return final_score, scores
 
     def find_matches(self, query_name: Dict) -> List[Dict]:
         matches = []
-        logger.debug(f"\nProcessing query name: {query_name['original_name']}")
-        logger.debug(f"\nMax number of matches: {self.max_number_of_matches}")
+        print(f"\nProcessing query name: {query_name['original_name']}")
+        print(f"\nMax number of matches: {self.max_number_of_matches}")
         
         # Step 1: Check for exact match
         for candidate in self.names:
@@ -291,7 +366,7 @@ class NameMatcher:
                 matches.append(match_result)
                 self.names.remove(candidate)  # Remove exact match from further processing
                 if len(matches) >= self.max_number_of_matches:
-                    logger.debug(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
+                    print(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
                     return matches
 
         # Step 2: Phase 1 filtering
@@ -302,9 +377,9 @@ class NameMatcher:
 
         # Step 3 & 4: Phase 2 scoring
         for candidate in phase1_candidates:
-            logger.debug(f"\nEvaluating candidate: {candidate['original_name']}")
+            print(f"\nEvaluating candidate: {candidate['original_name']}")
             final_score, algorithm_scores = self.calculate_phase2_scores(query_name, candidate)
-            logger.debug(f"Final score: {final_score:.3f}")
+            print(f"Final score: {final_score:.3f}")
 
             confidence = ''
             if final_score == 1.0:
@@ -326,7 +401,7 @@ class NameMatcher:
 
             matches.append(match_result)
             if len(matches) >= self.max_number_of_matches:
-                logger.debug(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
+                print(f"Reached maximum number of matches ({self.max_number_of_matches}). Stopping search.")
                 break
 
         # Return only one match since max_number_of_matches is set to 1 for mv003
@@ -337,52 +412,3 @@ class NameMatcher:
     
     def get_phase_2_algorithms(self) -> List[str]:
         return self.phase2_algorithms
-
-   
-
-
-def print_matching_results(results: List[Dict]):
-    """print formatted matching results"""
-    logger.debug("\n=== DETAILED MATCHING RESULTS ===\n")
-
-    for result in results:
-        logger.debug(f"Query Name: {result['query_name']}")
-        logger.debug("Matches:")
-
-        for idx, match in enumerate(result['matches'], 1):
-            logger.debug(f"\n  {idx}. Candidate: {match['candidate_name']}")
-            logger.debug(f"     Final Score: {match['final_score']:.3f}")
-            logger.debug(f"     Confidence: {match['confidence'].upper()}")
-            logger.debug("\n     Algorithm Scores:")
-
-            # logger.debug individual algorithm scores sorted by score value
-            sorted_scores = sorted(
-                match['algorithm_scores'].items(),
-                key=lambda x: x[1],
-                reverse=True
-            )
-            for alg_name, score in sorted_scores:
-                logger.debug(f"       - {alg_name}: {score:.3f}")
-
-        logger.debug("\n" + "="*50 + "\n")
-
-    # logger.debug summary statistics
-    total_matches = sum(len(result['matches']) for result in results)
-    avg_matches = total_matches / len(results) if results else 0
-
-    logger.debug("Summary Statistics:")
-    logger.debug(f"Total names with matches: {len(results)}")
-    logger.debug(f"Total matches found: {total_matches}")
-    logger.debug(f"Average matches per name: {avg_matches:.2f}")
-
-    # logger.debug confidence level breakdown
-    confidence_counts = defaultdict(int)
-    for result in results:
-        for match in result['matches']:
-            confidence_counts[match['confidence']] += 1
-
-    logger.debug("\nConfidence Level Breakdown:")
-    for confidence in ['EXACT_MATCH', 'RECOMMENDED', 'NO_MATCH']:
-        count = confidence_counts[confidence]
-        percentage = (count / total_matches * 100) if total_matches > 0 else 0
-        logger.debug(f"{confidence.upper()}: {count} ({percentage:.1f}%)")

@@ -1,7 +1,5 @@
 from flask import Flask
 from config import Config
-from logging.handlers import RotatingFileHandler
-import logging
 
 
 def create_app(config_class=Config):

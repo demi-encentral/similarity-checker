@@ -2,7 +2,6 @@ import re
 from typing import List, Dict, Set
 from sklearn.feature_extraction.text import TfidfVectorizer
 from unidecode import unidecode
-from logging_config import logger
 
 vectorizer = TfidfVectorizer(
     analyzer='char_wb',  # Use character n-grams with word boundaries
@@ -48,7 +47,7 @@ def create_vector_representation(names: List[Dict]) -> Dict[str, List[float]]:
     """
     Create TF-IDF vector representations for all names.
     """
-    logger.debug("Creating vector representations...")
+    print("Creating vector representations...")
     normalized_names = [name['normalized_name'] for name in names]
     tfidf_matrix = vectorizer.fit_transform(normalized_names)
 
@@ -57,7 +56,7 @@ def create_vector_representation(names: List[Dict]) -> Dict[str, List[float]]:
         vector = tfidf_matrix[i].toarray()[0]
         vector_dict[name['original_name']] = vector.tolist()
 
-    logger.debug(f"Created vectors with {len(vectorizer.get_feature_names_out())} features")
+    print(f"Created vectors with {len(vectorizer.get_feature_names_out())} features")
     return vector_dict
 
 def tokenize_name(name: str) -> List[str]:
@@ -93,27 +92,27 @@ def preprocess_single_name(
     Returns:
         Dict: Processed name with original name, normalized name, tokens, and n-grams and its vector representation.
     """
-    logger.debug(f"\nProcessing single name: {name}")
+    print(f"\nProcessing single name: {name}")
 
     # Remove titles
     name_no_titles = remove_titles(name, titles)
-    logger.debug(f"After title removal: {name_no_titles}")
+    print(f"After title removal: {name_no_titles}")
 
     # Normalize name
     normalized_name = normalize_text(name_no_titles)
-    logger.debug(f"After normalization: {normalized_name}")
+    print(f"After normalization: {normalized_name}")
 
     # Tokenize name
     tokens = tokenize_name(normalized_name)
-    logger.debug(f"After tokenization: {tokens}")
+    print(f"After tokenization: {tokens}")
 
     # Replace aliases
     processed_tokens = replace_aliases(tokens, alias_dict)
-    logger.debug(f"After alias replacement: {processed_tokens}")
+    print(f"After alias replacement: {processed_tokens}")
 
     # Compute n-grams
     ngrams = compute_ngrams(normalized_name)
-    logger.debug(f"Generated n-grams: {len(ngrams['bigrams'])} bigrams, {len(ngrams['trigrams'])} trigrams, {len(ngrams['quadgrams'])} quadgrams")
+    print(f"Generated n-grams: {len(ngrams['bigrams'])} bigrams, {len(ngrams['trigrams'])} trigrams, {len(ngrams['quadgrams'])} quadgrams")
 
 
     # Assemble the result

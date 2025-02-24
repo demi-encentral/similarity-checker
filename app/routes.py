@@ -39,6 +39,7 @@ def process():
 
     # Add algorithm scores and weights dynamically, excluding if not present
     entry_ids = [
+        ("entry.1042142164", "entry.453361351"),
         ("entry.2142612982", "entry.1887520687"),
         ("entry.805292406", "entry.1695931903"),
         ("entry.1357732384", "entry.1635473942"),
@@ -48,7 +49,6 @@ def process():
         ("entry.347707063", "entry.296442444"),
         ("entry.226430670", "entry.1658968048"),
         ("entry.1764884276", "entry.1579933235"),
-        ("entry.1042142164", "entry.453361351")
     ]
 
     for i, alg in enumerate(alg_names):

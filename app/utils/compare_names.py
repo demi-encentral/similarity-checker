@@ -5,7 +5,6 @@ from app.utils.name_matcher import NameMatcher
 from app.utils.numpy_encoder import NumpyEncoder
 from app.utils.preprocess import create_vector_representation, preprocess_single_name
 from config import Config
-from logging_config import logger
 
 def compare_input_names(name1: str, name2: str):
     model_id = Config.MODEL_ID
@@ -13,13 +12,13 @@ def compare_input_names(name1: str, name2: str):
     alias_map = load_json_file("alias_map.json")
     titles = load_json_file("titles.json")
     
-    logger.info(f"\nPreprocessing the first name: {name1}")
+    print(f"\nPreprocessing the first name: {name1}")
     processed_name1 = preprocess_single_name(name1, alias_map, titles)
-    logger.info(f'processed name1 is {processed_name1}')
+    print(f'processed name1 is {processed_name1}')
 
-    logger.info(f"\nPreprocessing the second name: {name2}")
+    print(f"\nPreprocessing the second name: {name2}")
     processed_name2 = preprocess_single_name(name2, alias_map, titles)
-    logger.info(f'processed name2 is {processed_name2}')
+    print(f'processed name2 is {processed_name2}')
     
     processed_names = [processed_name1, processed_name2]
     vector_repr = create_vector_representation(processed_names)
